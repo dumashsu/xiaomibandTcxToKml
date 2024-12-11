@@ -19,8 +19,8 @@ def main(v_argv):
     if len(v_argv)==1:
         print("Usage:python XaioMiBandTcxToKml.py <filename tcx>")
         sys.exit()
-
     #開參數檔並讀入 v_ini_data 內,轉出時可直接使用,簡化程式
+    #v_argv=["1",v_argv]
     with open('xiaomiband.ini', 'r') as kml_f:
         v_ini_data=kml_f.read()
     with open(v_argv[1]+'.tcx', 'r') as f:
@@ -35,7 +35,7 @@ def main(v_argv):
             將轉出的KML檔內的名稱替換
             寫入抬頭-至起點, 寫入時才改名稱才不會 ID 錯誤
             """
-            writer.write(v_ini_data[0:1527].replace("Track Points","02"))
+            writer.write(v_ini_data[0:1527].replace("Track Points",v_argv[1]))
             #第一筆直接寫入檔案,其它則加入 v_coordinates_content , 最後才一起寫入
           
             v_first_data=True
@@ -51,16 +51,19 @@ def main(v_argv):
                 else:                  
                     v_coordinates_content=v_coordinates_content+v_coordinates_data                   
             # 寫入終點和其值
-            writer.write(v_ini_data[1527:1706].replace("Track Points","02"))
+            writer.write(v_ini_data[1527:1706].replace("Track Points",v_argv[1]))
             writer.write(v_coordinates_data)
-            writer.write(v_ini_data[1706:1810].replace("Track Points","02"))
+            writer.write(v_ini_data[1706:1810].replace("Track Points",v_argv[1]))
             
             #寫入描述
             writer.write(" "*6+"<description>\n"+" "*8+"<![CDATA[")
             writer.write("日期: "+s.find('Id').get_text()[:10]+"<br>")
-            writer.write("消耗卡路里: "+s.find('Calories').get_text()+"<br>")
+            #卡路里有2個第一個為總，第2個為實際
+            v_Calories = s.find_all('Calories')
+            writer.write("消耗卡路里: "+v_Calories[0].get_text()+"/"+v_Calories[1].get_text()+"<br>")
             writer.write("時間: "+s.find('TotalTimeSeconds').get_text()+"<br>")
-            writer.write("距離: "+s.find("DistanceMeters").get_text()+"<br>")
+            v_DistanceMeters=s.find("DistanceMeters").get_text()        
+            writer.write("距離: "+v_DistanceMeters[:-3]+'.'+v_DistanceMeters[-3:]+" KM<br>")
             writer.write("平均心率: "+s.find("HeartRateBpm").get_text()+"<br>")
             writer.write("步數:  "+s.find("Steps").get_text()+"<br>")
             writer.write(" ]]>\n"+" "*6+"</description>")       
@@ -73,4 +76,4 @@ def main(v_argv):
             
 if __name__ == "__main__":
     main(sys.argv)
-    #main("20241203徒步")
+    #main("20241210徒步")
